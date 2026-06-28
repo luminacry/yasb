@@ -2,6 +2,7 @@
 Widgets configuration for the YASB setup wizard.
 """
 
+from core.i18n import tr
 from core.utils.system import is_windows_10
 
 CPU_ICON = "\ue950" if is_windows_10() else "\ueea1"
@@ -21,10 +22,10 @@ BASE_WIDGET: dict = {
                 "options": {
                     "label": "<span>\ue8a9</span>",
                     "menu_list": [
-                        {"title": "User Home", "path": "~"},
-                        {"title": "Download", "path": "~\\Downloads"},
-                        {"title": "Documents", "path": "~\\Documents"},
-                        {"title": "Pictures", "path": "~\\Pictures"},
+                        {"title": tr("User Home"), "path": "~"},
+                        {"title": tr("Download"), "path": "~\\Downloads"},
+                        {"title": tr("Documents"), "path": "~\\Documents"},
+                        {"title": tr("Pictures"), "path": "~\\Pictures"},
                     ],
                     "system_menu": True,
                     "power_menu": True,
@@ -92,7 +93,7 @@ BASE_WIDGET: dict = {
                 "type": "yasb.notifications.NotificationsWidget",
                 "options": {
                     "label": "<span>\uf2a5</span>",
-                    "label_alt": "{count} notifications",
+                    "label_alt": "{count} " + tr("notifications"),
                     "hide_empty": True,
                     "tooltip": False,
                     "callbacks": {
@@ -119,13 +120,13 @@ BASE_WIDGET: dict = {
                     },
                     "profile_image_size": 64,
                     "buttons": {
-                        "lock": ["\udb80\udf41", "Lock"],
-                        "signout": ["\udb80\udf43", "Sign out"],
-                        "sleep": ["\udb82\udd04", "Sleep"],
-                        "hibernate": ["\udb82\udd01", "Hibernate"],
-                        "restart": ["\udb81\udc53", "Restart"],
-                        "shutdown": ["\udb82\udd06", "Shut Down"],
-                        "cancel": ["", "Cancel"],
+                        "lock": ["\udb80\udf41", tr("Lock")],
+                        "signout": ["\udb80\udf43", tr("Sign out")],
+                        "sleep": ["\udb82\udd04", tr("Sleep")],
+                        "hibernate": ["\udb82\udd01", tr("Hibernate")],
+                        "restart": ["\udb81\udc53", tr("Restart")],
+                        "shutdown": ["\udb82\udd06", tr("Shut Down")],
+                        "cancel": ["", tr("Cancel")],
                     },
                 },
             },
@@ -266,7 +267,7 @@ QUICK_LAUNCH_WIDGET: dict = {
                 "type": "yasb.quick_launch.QuickLaunchWidget",
                 "options": {
                     "label": "<span>\ue71e</span>",
-                    "search_placeholder": "Search applications...",
+                    "search_placeholder": tr("Search applications..."),
                     "max_results": 30,
                     "show_icons": True,
                     "icon_size": 16,
@@ -376,7 +377,7 @@ WEATHER_WIDGET: dict = {
                 "type": "yasb.open_meteo.OpenMeteoWidget",
                 "options": {
                     "label": "<span>\ue706</span>{temp}",
-                    "label_alt": "{location}: Min {min_temp}, Max {max_temp}, Humidity {humidity}",
+                    "label_alt": f"{{location}}: {tr('Min')} {{min_temp}}, {tr('Max')} {{max_temp}}, {tr('Humidity')} {{humidity}}",
                     "tooltip": True,
                     "update_interval": 600,
                     "hide_decimal": True,

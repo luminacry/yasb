@@ -22,6 +22,7 @@ from PyQt6.QtWidgets import (
     QVBoxLayout,
 )
 
+from core.i18n import tr
 from core.ui.components.button import Button
 from core.ui.components.loader import Spinner
 from core.ui.components.text_block import TextBlock
@@ -61,7 +62,7 @@ class ReleaseFetcher(QThread):
             release_info = self._update_service.check_for_updates(timeout=15)
 
             if release_info is None:
-                self.up_to_date.emit(f"You already have the latest version ({self._current_version})")
+                self.up_to_date.emit(tr("You already have the latest version ({version})", version=self._current_version))
                 return
 
             # Update available
@@ -69,10 +70,10 @@ class ReleaseFetcher(QThread):
 
         except urllib.error.HTTPError as http_error:
             logging.error("GitHub responded with HTTP error during update check: %s", http_error)
-            self.error.emit("GitHub returned an error while checking for updates.")
+            self.error.emit(tr("GitHub returned an error while checking for updates."))
         except urllib.error.URLError as url_error:
             logging.warning("Network error during update check: %s", url_error)
-            self.error.emit("Couldn't reach GitHub. Check your internet connection and try again.")
+            self.error.emit(tr("Couldn't reach GitHub. Check your internet connection and try again."))
         except Exception as exc:
             logging.error("Unexpected error while checking for updates: %s", exc)
             self.error.emit(str(exc))
@@ -128,7 +129,7 @@ class DownloadWorker(QThread):
                     self._output_path.unlink()
                 except Exception:
                     pass
-            self.error.emit("Download cancelled.")
+            self.error.emit(tr("Download cancelled."))
         except urllib.error.URLError as url_error:
             logging.warning("Network error while downloading update: %s", url_error)
             if self._output_path.exists():
@@ -136,7 +137,7 @@ class DownloadWorker(QThread):
                     self._output_path.unlink()
                 except Exception:
                     pass
-            self.error.emit("Couldn't reach GitHub. Check your internet connection and try again.")
+            self.error.emit(tr("Couldn't reach GitHub. Check your internet connection and try again."))
         except Exception as exc:
             if isinstance(exc, IOError):
                 logging.warning("Download did not finish: %s", exc)
@@ -239,7 +240,7 @@ class UpdateDialog(ViewBase, QDialog):
         release_info: ReleaseInfo | None = None,
     ):
         super().__init__(parent)
-        self.setWindowTitle("Check for Updates")
+        self.setWindowTitle(tr("Check for Updates"))
         self.setModal(True)
         self.setWindowFlag(Qt.WindowType.WindowStaysOnTopHint, True)
         self.setAttribute(Qt.WidgetAttribute.WA_DeleteOnClose)
@@ -368,13 +369,13 @@ class UpdateDialog(ViewBase, QDialog):
         button_row.addWidget(self.status_label)
         button_row.addStretch(1)
 
-        self.download_button = Button("Download and Install", variant="accent", parent=self)
+        self.download_button = Button(tr("Download and Install"), variant="accent", parent=self)
         self.download_button.setVisible(True)
         self.download_button.setEnabled(False)
         self.download_button.clicked.connect(self._start_download)
         button_row.addWidget(self.download_button)
 
-        self.close_button = Button("Close", parent=self)
+        self.close_button = Button(tr("Close"), parent=self)
         self.close_button.clicked.connect(self._on_close_button_clicked)
         button_row.addWidget(self.close_button)
 
@@ -403,7 +404,7 @@ class UpdateDialog(ViewBase, QDialog):
 
     def _set_idle_state(self, *, enabled: bool, status: str = "", error: bool = False) -> None:
         self.download_button.setEnabled(enabled)
-        self.download_button.setText("Download and Install")
+        self.download_button.setText(tr("Download and Install"))
         self.download_button.setDefault(enabled)
         self.download_button.setVisible(True)
         self.progress_bar.setVisible(False)
@@ -421,20 +422,20 @@ class UpdateDialog(ViewBase, QDialog):
             release_info: Release information including version and architecture
         """
         self._available_release = release_info
-        self.setWindowTitle("Update Available")
+        self.setWindowTitle(tr("Update Available"))
 
         # Display title with version and architecture
         update_service = get_update_service()
         if update_service._current_channel == "preview":
-            version_display = f"New Preview Build ({release_info.version.replace('preview-', '')})"
+            version_display = tr("New Preview Build ({version})", version=release_info.version.replace("preview-", ""))
         else:
-            version_display = f"Version {release_info.version}"
+            version_display = tr("Version {version}", version=release_info.version)
 
-        self.title_label.setText(f"{version_display} - {release_info.architecture}")
+        self.title_label.setText(tr("{version_display} - {arch}", version_display=version_display, arch=release_info.architecture))
         self.title_label.setVisible(True)
 
         # Display changelog
-        changelog = release_info.changelog.strip() or "_No changelog provided._"
+        changelog = release_info.changelog.strip() or tr("_No changelog provided._")
         changelog = convert_img_tags(changelog)
         html = md_to_html(strip_commit_links(changelog, repo_url="https://github.com/amnweb/yasb"))
         self._show_spinner(True)
@@ -460,12 +461,12 @@ class UpdateDialog(ViewBase, QDialog):
 
         self._cancel_requested = False
         self.download_button.setEnabled(False)
-        self.download_button.setText("Downloading...")
+        self.download_button.setText(tr("Downloading..."))
         self.download_button.setDefault(False)
         self.progress_bar.setVisible(True)
         self.progress_bar.setRange(0, 100)
         self.progress_bar.setValue(0)
-        self._set_status("Downloading update...")
+        self._set_status(tr("Downloading update..."))
         self._set_close_button_state(is_cancel=True)
         self.close_button.setEnabled(True)
 
@@ -485,7 +486,7 @@ class UpdateDialog(ViewBase, QDialog):
         worker = self._active_download_worker()
         if worker:
             self.close_button.setEnabled(False)
-            self._set_status("Cancelling download.")
+            self._set_status(tr("Cancelling download."))
             self._cancel_active_download()
             self.close_button.setEnabled(True)
             return
@@ -518,14 +519,14 @@ class UpdateDialog(ViewBase, QDialog):
                     pass
             self._set_idle_state(
                 enabled=self._available_release is not None,
-                status="Download failed: installer file is incomplete. Please try again.",
+                status=tr("Download failed: installer file is incomplete. Please try again."),
                 error=True,
             )
             return
-        self.download_button.setText("Launching installer...")
+        self.download_button.setText(tr("Launching installer..."))
         self.download_button.setEnabled(False)
         self._set_close_button_state(is_cancel=False)
-        self._set_status("Download complete. Launching installer...")
+        self._set_status(tr("Download complete. Launching installer..."))
         self._cancel_requested = False
         QTimer.singleShot(0, lambda: self._launch_installer(path))
 
@@ -547,9 +548,9 @@ class UpdateDialog(ViewBase, QDialog):
         self._download_worker = None
         self.close_button.setEnabled(True)
         normalized_message = (message or "").strip().lower()
-        was_cancelled = self._cancel_requested or normalized_message == "download cancelled."
-        details = message.splitlines()[0] if message else "Unknown error"
-        status_message = "Download cancelled." if was_cancelled else f"Download failed: {details}"
+        was_cancelled = self._cancel_requested or normalized_message in {"download cancelled.", "下载已取消。"}
+        details = message.splitlines()[0] if message else tr("Unknown error")
+        status_message = tr("Download cancelled.") if was_cancelled else tr("Download failed: {details}", details=details)
         self._set_idle_state(
             enabled=self._available_release is not None,
             status=status_message,
@@ -580,7 +581,7 @@ class UpdateDialog(ViewBase, QDialog):
         super().closeEvent(event)
 
     def _set_close_button_state(self, *, is_cancel: bool) -> None:
-        self.close_button.setText("Cancel" if is_cancel else "Close")
+        self.close_button.setText(tr("Cancel") if is_cancel else tr("Close"))
 
     def present(self) -> None:
         if not self.isVisible():

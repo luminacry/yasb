@@ -12,7 +12,7 @@
 </p>
 
 <h3 align="center">
-  <a href="https://github.com/amnweb/yasb/wiki/Installation">Installation</a>
+  <a href="https://github.com/luminacry/yasb/releases/latest">Download</a>
   <span> · </span>
   <a href="https://github.com/amnweb/yasb/wiki">Documentation</a>
   <span> · </span>
@@ -24,6 +24,41 @@
 </h3>
 <br/><br/>
 
+## 简体中文说明
+
+这是 `luminacry/yasb` 维护的 YASB 中文界面版本，基于上游 [amnweb/yasb](https://github.com/amnweb/yasb)。
+
+当前已汉化的主要界面包括：首次启动向导、字体安装提示、系统托盘菜单、状态栏右键菜单、关于窗口、更新窗口、主题浏览器，以及向导生成的默认菜单标签。
+
+### 如何使用中文界面
+
+在中文 Windows 系统中，YASB 会自动显示中文界面。如果仍然显示英文，可以手动设置环境变量后重启 YASB：
+
+```powershell
+setx YASB_LANGUAGE zh_CN
+yasbc stop
+yasbc start
+```
+
+也可以只对当前 PowerShell 窗口临时启用中文：
+
+```powershell
+$env:YASB_LANGUAGE="zh_CN"
+& "C:\Program Files\YASB\yasb.exe"
+```
+
+需要恢复英文时：
+
+```powershell
+setx YASB_LANGUAGE en
+yasbc stop
+yasbc start
+```
+
+### 安装方式
+
+如果本仓库已经发布 Release，请优先下载 [luminacry/yasb Releases](https://github.com/luminacry/yasb/releases/latest) 里的 `.msi` 安装包。使用上游 `winget`、Scoop、Chocolatey 或上游 Release 安装的版本不会包含本 fork 的中文改动。
+
 ## 📋 Installation
 
 For detailed installation instructions and system requirements, visit the [installation docs](https://github.com/amnweb/yasb/wiki/Installation). 
@@ -32,7 +67,7 @@ But to get started quickly, choose one of the installation methods below:
 <details open>
 <summary><strong>Download .msi from GitHub</strong></summary>
 <br/>
-Go to the <a href="https://github.com/amnweb/yasb/releases/latest">YASB GitHub releases</a>, click Assets to reveal the downloads, and choose the installer that matches your architecture and install scope. For most devices, that's the x64 per-user installer.
+Go to the <a href="https://github.com/luminacry/yasb/releases/latest">luminacry/yasb releases</a>, click Assets to reveal the downloads, and choose the installer that matches your architecture and install scope. For most devices, that's the x64 per-user installer.
 </details>
 
 <details>

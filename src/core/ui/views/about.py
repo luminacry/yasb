@@ -11,6 +11,7 @@ from PyQt6.QtWidgets import (
     QWidget,
 )
 
+from core.i18n import tr
 from core.ui.components.button import Button
 from core.ui.components.link import Link
 from core.ui.components.text_block import TextBlock
@@ -36,16 +37,16 @@ if TYPE_CHECKING:
 
 class AboutDialog(ViewBase, QDialog):
     _STATE_CONFIG = {
-        "idle": {"text": "Check for Updates", "enabled": True, "attr": "idle"},
-        "checking": {"text": "Checking for Updates", "enabled": False, "attr": "checking"},
-        "available": {"text": "New Update Available", "enabled": True, "attr": "available"},
+        "idle": {"text": tr("Check for Updates"), "enabled": True, "attr": "idle"},
+        "checking": {"text": tr("Checking for Updates"), "enabled": False, "attr": "checking"},
+        "available": {"text": tr("New Update Available"), "enabled": True, "attr": "available"},
         "unsupported": {
-            "text": "Updates disabled",
+            "text": tr("Updates disabled"),
             "enabled": False,
             "attr": "unsupported",
-            "tooltip": "Automatic updates are disabled for PR build."
+            "tooltip": tr("Automatic updates are disabled for PR build.")
             if RELEASE_CHANNEL.startswith("pr-")
-            else "Install YASB to enable automatic updates.",
+            else tr("Install YASB to enable automatic updates."),
         },
     }
 
@@ -72,7 +73,7 @@ class AboutDialog(ViewBase, QDialog):
         self._apply_state("idle")
 
     def _build_window(self) -> None:
-        self.setWindowTitle(f"About {APP_NAME}")
+        self.setWindowTitle(tr("About {app}", app=APP_NAME))
         self.setWindowFlag(Qt.WindowType.WindowContextHelpButtonHint, False)
         self.setWindowFlag(Qt.WindowType.WindowStaysOnTopHint, True)
         self.setWindowFlag(Qt.WindowType.Window, True)
@@ -100,13 +101,16 @@ class AboutDialog(ViewBase, QDialog):
         layout.addWidget(title_label)
 
         arch_suffix = f" {ARCHITECTURE}" if ARCHITECTURE else ""
-        version_label = TextBlock(f"Version {BUILD_VERSION}{arch_suffix} ({RELEASE_CHANNEL})", variant="caption")
+        version_label = TextBlock(
+            tr("Version {version}{arch} ({channel})", version=BUILD_VERSION, arch=arch_suffix, channel=RELEASE_CHANNEL),
+            variant="caption",
+        )
         version_label.setContentsMargins(0, 4, 0, 6)
         version_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(version_label)
 
         release_url = self._get_release_notes_url()
-        release_label = "View PR Details" if RELEASE_CHANNEL.startswith("pr-") else "View Release Notes"
+        release_label = tr("View PR Details") if RELEASE_CHANNEL.startswith("pr-") else tr("View Release Notes")
         release_note_btn = self._create_link_button(release_label, lambda: self._tray._open_in_browser(release_url))
         layout.addWidget(release_note_btn, alignment=Qt.AlignmentFlag.AlignHCenter)
 
@@ -118,7 +122,7 @@ class AboutDialog(ViewBase, QDialog):
         links_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         github_btn = self._create_link_button("GitHub", lambda: self._tray._open_in_browser(GITHUB_URL))
-        themes_btn = self._create_link_button("Themes", lambda: self._tray._open_in_browser(GITHUB_THEME_URL))
+        themes_btn = self._create_link_button(tr("Themes"), lambda: self._tray._open_in_browser(GITHUB_THEME_URL))
         discord_btn = self._create_link_button(
             "Discord", lambda: self._tray._open_in_browser("https://discord.gg/qkeunvBFgX")
         )
@@ -133,14 +137,14 @@ class AboutDialog(ViewBase, QDialog):
         button_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
 
         self._support_project_button = self._create_action_button(
-            "Support the Project",
+            tr("Support the Project"),
             lambda: self._tray._open_in_browser("https://ko-fi.com/amnweb"),
         )
         self._contributors_button = self._create_action_button(
-            "Contributors",
+            tr("Contributors"),
             lambda: self._tray._open_in_browser(f"{GITHUB_URL}/graphs/contributors"),
         )
-        self._open_config_button = self._create_action_button("Open Config", self._tray._open_config)
+        self._open_config_button = self._create_action_button(tr("Open Config"), self._tray._open_config)
         idle_text = self._STATE_CONFIG["idle"]["text"]
         self._update_button = self._create_action_button(idle_text, self._handle_update_clicked)
         if not self._updates_supported:
@@ -220,11 +224,11 @@ class AboutDialog(ViewBase, QDialog):
 
     def _handle_up_to_date(self, _message: str, fetcher_ref: ReleaseFetcher | None = None) -> None:
         self._clear_fetcher(fetcher_ref)
-        self._apply_state("idle", text_override="You're on the latest version", revert_after=2400)
+        self._apply_state("idle", text_override=tr("You're on the latest version"), revert_after=2400)
 
     def _handle_check_failed(self, _message: str, fetcher_ref: ReleaseFetcher | None = None) -> None:
         self._clear_fetcher(fetcher_ref)
-        self._apply_state("idle", text_override="Update Check Failed", revert_after=3200)
+        self._apply_state("idle", text_override=tr("Update Check Failed"), revert_after=3200)
 
     def _clear_fetcher(self, fetcher_ref: ReleaseFetcher | None = None) -> None:
         if fetcher_ref is None or self._release_fetcher is fetcher_ref:

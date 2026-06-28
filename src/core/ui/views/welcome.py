@@ -29,6 +29,7 @@ from PyQt6.QtWidgets import (
     QWidget,
 )
 
+from core.i18n import tr
 from core.setup.builder import (
     FEATURE_GROUPS,
     OPTIONAL_GROUPS,
@@ -122,41 +123,41 @@ class FontInstallWorker(QThread):
 
             if self._install_nerd:
                 if self._stop:
-                    self.finished.emit(False, "Installation cancelled.", [])
+                    self.finished.emit(False, tr("Installation cancelled."), [])
                     return
-                self.progress.emit("Downloading JetBrains Mono Nerd Font...")
+                self.progress.emit(tr("Downloading JetBrains Mono Nerd Font..."))
                 nerd_url = self._resolve_nerd_font_url()
                 nerd_paths = self._download_and_extract_zip(nerd_url, fonts_dir)
                 if self._stop:
-                    self.finished.emit(False, "Installation cancelled.", nerd_paths)
+                    self.finished.emit(False, tr("Installation cancelled."), nerd_paths)
                     return
-                self.progress.emit("Installing JetBrains Mono Nerd Font...")
+                self.progress.emit(tr("Installing JetBrains Mono Nerd Font..."))
                 self._install_fonts(nerd_paths)
                 installed.extend(nerd_paths)
 
             if self._install_segoe:
                 if self._stop:
-                    self.finished.emit(False, "Installation cancelled.", installed)
+                    self.finished.emit(False, tr("Installation cancelled."), installed)
                     return
-                self.progress.emit("Downloading Segoe Fluent Icons...")
+                self.progress.emit(tr("Downloading Segoe Fluent Icons..."))
                 segoe_paths = self._download_and_extract_zip(SEGOE_FLUENT_URL, fonts_dir)
                 if self._stop:
-                    self.finished.emit(False, "Installation cancelled.", installed)
+                    self.finished.emit(False, tr("Installation cancelled."), installed)
                     return
-                self.progress.emit("Installing Segoe Fluent Icons...")
+                self.progress.emit(tr("Installing Segoe Fluent Icons..."))
                 self._install_fonts(segoe_paths)
                 installed.extend(segoe_paths)
 
             if self._stop:
-                self.finished.emit(False, "Installation cancelled.", installed)
+                self.finished.emit(False, tr("Installation cancelled."), installed)
                 return
 
-            self.progress.emit("Finalizing installation...")
+            self.progress.emit(tr("Finalizing installation..."))
             try:
                 ctypes.windll.user32.SendNotifyMessageW(0xFFFF, 0x001D, 0, 0)
             except Exception:
                 pass
-            self.finished.emit(True, "All fonts installed successfully.", installed)
+            self.finished.emit(True, tr("All fonts installed successfully."), installed)
         except Exception as exc:
             self.finished.emit(False, self._urllib_error(exc), [])
 
@@ -214,20 +215,20 @@ class FontInstallWorker(QThread):
         if isinstance(exc, urllib.error.URLError):
             reason = getattr(exc, "reason", "")
             if isinstance(reason, OSError) and reason.errno == 11001:
-                return "Unable to connect. Check your internet connection and try again."
+                return tr("Unable to connect. Check your internet connection and try again.")
             if isinstance(reason, TimeoutError) or "timed out" in str(reason).lower():
-                return "Connection timed out. Please check your network and try again."
-            return "Unable to download fonts. Check your internet connection and try again."
+                return tr("Connection timed out. Please check your network and try again.")
+            return tr("Unable to download fonts. Check your internet connection and try again.")
         if isinstance(exc, OSError):
             s = str(exc)
             if s.startswith("HTTP "):
-                return f"Download failed ({s}). The file may no longer be available."
+                return tr("Download failed ({error}). The file may no longer be available.", error=s)
             if getattr(exc, "errno", None) == 13 or getattr(exc, "winerror", None) == 5:
-                return "Permission denied. Close any apps using the font and try again."
-            return "A file system error occurred while installing fonts."
+                return tr("Permission denied. Close any apps using the font and try again.")
+            return tr("A file system error occurred while installing fonts.")
         if isinstance(exc, TimeoutError):
-            return "Connection timed out. Please check your network and try again."
-        return "An unexpected error occurred while installing fonts."
+            return tr("Connection timed out. Please check your network and try again.")
+        return tr("An unexpected error occurred while installing fonts.")
 
     def _install_fonts(self, paths: list[str]) -> None:
         for dest in paths:
@@ -284,7 +285,7 @@ class WelcomeWizard(ViewBase, QDialog):
 
     def _build_window(self) -> None:
         self.setObjectName("WelcomeWizard")
-        self.setWindowTitle(f"Welcome to {APP_NAME}")
+        self.setWindowTitle(tr("Welcome to {app}", app=APP_NAME))
         self.setWindowFlags(
             Qt.WindowType.Window
             | Qt.WindowType.CustomizeWindowHint
@@ -323,10 +324,10 @@ class WelcomeWizard(ViewBase, QDialog):
         root_layout.addWidget(indicator_container)
 
     def _header(self, layout: QVBoxLayout, title: str, desc: str, spacing: int = 24) -> None:
-        title_label = TextBlock(title, variant="subtitle")
+        title_label = TextBlock(tr(title), variant="subtitle")
         layout.addWidget(title_label)
         layout.addSpacing(4)
-        desc_label = TextBlock(desc, variant="caption")
+        desc_label = TextBlock(tr(desc), variant="caption")
         desc_label.setWordWrap(True)
         layout.addWidget(desc_label)
         layout.addSpacing(spacing)
@@ -338,7 +339,7 @@ class WelcomeWizard(ViewBase, QDialog):
         card_layout.setContentsMargins(14, 10, 14, 10)
         card_layout.setSpacing(2)
         for text, cls in ((label, "body-strong"), (desc, "caption")):
-            card_label = TextBlock(text, variant=cls)
+            card_label = TextBlock(tr(text), variant=cls)
             card_label.setWordWrap(cls == "caption")
             card_label.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
             card_layout.addWidget(card_label)
@@ -349,11 +350,11 @@ class WelcomeWizard(ViewBase, QDialog):
     def _nav(self, back_page: int, next_page: int) -> QHBoxLayout:
         nav_layout = QHBoxLayout()
         nav_layout.setSpacing(12)
-        back_btn = Button("Back", padding="24,8,24,8")
+        back_btn = Button(tr("Back"), padding="24,8,24,8")
         back_btn.clicked.connect(lambda: self._go(back_page))
         nav_layout.addWidget(back_btn)
         nav_layout.addStretch()
-        next_btn = Button("Next", variant="accent", padding="24,8,24,8")
+        next_btn = Button(tr("Next"), variant="accent", padding="24,8,24,8")
         next_btn.clicked.connect(lambda: self._go(next_page))
         nav_layout.addWidget(next_btn)
         return nav_layout
@@ -371,13 +372,13 @@ class WelcomeWizard(ViewBase, QDialog):
         row_layout.setSpacing(12)
         text_layout = QVBoxLayout()
         text_layout.setSpacing(2)
-        title_label = TextBlock(title, variant="body-strong")
+        title_label = TextBlock(tr(title), variant="body-strong")
         text_layout.addWidget(title_label)
-        desc_label = TextBlock(desc, variant="caption")
+        desc_label = TextBlock(tr(desc), variant="caption")
         text_layout.addWidget(desc_label)
         row_layout.addLayout(text_layout)
         row_layout.addStretch()
-        toggle = ToggleSwitchWithLabel(on_text="On", off_text="Off", checked=checked)
+        toggle = ToggleSwitchWithLabel(on_text=tr("On"), off_text=tr("Off"), checked=checked)
         toggle.toggled.connect(lambda val, k=option_key: self._option_selected.__setitem__(k, val))
         row_layout.addWidget(toggle)
         return row_frame
@@ -389,9 +390,9 @@ class WelcomeWizard(ViewBase, QDialog):
         row_layout.setSpacing(12)
         text_layout = QVBoxLayout()
         text_layout.setSpacing(2)
-        title_label = TextBlock(title, variant="body-strong")
+        title_label = TextBlock(tr(title), variant="body-strong")
         text_layout.addWidget(title_label)
-        desc_label = TextBlock(desc, variant="caption")
+        desc_label = TextBlock(tr(desc), variant="caption")
         text_layout.addWidget(desc_label)
         row_layout.addLayout(text_layout)
         row_layout.addStretch()
@@ -408,10 +409,10 @@ class WelcomeWizard(ViewBase, QDialog):
     ) -> ContentDialog:
         return ContentDialog(
             parent=self,
-            title=title,
+            title=tr(title),
             content=content,
-            primary_button_text=primary_text,
-            close_button_text=close_text,
+            primary_button_text=tr(primary_text) if primary_text else "",
+            close_button_text=tr(close_text),
             default_button=default,
         )
 
@@ -461,12 +462,14 @@ class WelcomeWizard(ViewBase, QDialog):
             icon_label.setPixmap(self._app_icon.pixmap(128, 128))
         page_layout.addWidget(icon_label)
         page_layout.addSpacing(16)
-        title_label = TextBlock(f"Welcome to {APP_NAME}", variant="title")
+        title_label = TextBlock(tr("Welcome to {app}", app=APP_NAME), variant="title")
         title_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         page_layout.addWidget(title_label)
         page_layout.addSpacing(16)
         subtitle_label = TextBlock(
-            "Let's get your bar set up. Some essential widgets are already included.\nYou can customise everything later in the config file.",
+            tr(
+                "Let's get your bar set up. Some essential widgets are already included.\nYou can customise everything later in the config file."
+            ),
             variant="body-secondary",
         )
         subtitle_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -476,11 +479,12 @@ class WelcomeWizard(ViewBase, QDialog):
         buttons_layout = QVBoxLayout()
         buttons_layout.setSpacing(12)
         buttons_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        start_btn = Button("Get Started", variant="accent", padding="32,12,32,12", font_size=16)
+        start_btn = Button(tr("Get Started"), variant="accent", padding="32,12,32,12", font_size=16)
         start_btn.clicked.connect(lambda: self._go(1))
         buttons_layout.addWidget(start_btn, alignment=Qt.AlignmentFlag.AlignCenter)
         buttons_layout.addWidget(
-            self._link("Skip and create minimal configuration", self._on_skip), alignment=Qt.AlignmentFlag.AlignCenter
+            self._link(tr("Skip and create minimal configuration"), self._on_skip),
+            alignment=Qt.AlignmentFlag.AlignCenter,
         )
         page_layout.addLayout(buttons_layout)
         page_layout.addSpacing(8)
@@ -493,8 +497,10 @@ class WelcomeWizard(ViewBase, QDialog):
         page_layout.setSpacing(0)
         self._header(
             page_layout,
-            "Fonts & Icons",
-            "YASB requires specific fonts for the bar and UI icons. Missing fonts will be downloaded and installed for your user account.",
+            tr("Fonts & Icons"),
+            tr(
+                "YASB requires specific fonts for the bar and UI icons. Missing fonts will be downloaded and installed for your user account."
+            ),
             spacing=16,
         )
 
@@ -510,12 +516,12 @@ class WelcomeWizard(ViewBase, QDialog):
             row_layout.setSpacing(12)
             text_layout = QVBoxLayout()
             text_layout.setSpacing(2)
-            title_label = TextBlock(font["label"], variant="body-strong")
+            title_label = TextBlock(tr(font["label"]), variant="body-strong")
             text_layout.addWidget(title_label)
             desc = (
-                "Bar font with 10,000+ icons from popular icon sets"
+                tr("Bar font with 10,000+ icons from popular icon sets")
                 if "Nerd" in font["label"]
-                else "System icon font used for UI elements"
+                else tr("System icon font used for UI elements")
             )
             desc_label = TextBlock(desc, variant="caption")
             text_layout.addWidget(desc_label)
@@ -542,15 +548,15 @@ class WelcomeWizard(ViewBase, QDialog):
 
         nav_layout = QHBoxLayout()
         nav_layout.setSpacing(12)
-        self._font_back_btn = Button("Back", padding="24,8,24,8")
+        self._font_back_btn = Button(tr("Back"), padding="24,8,24,8")
         self._font_back_btn.clicked.connect(lambda: self._go(0))
         nav_layout.addWidget(self._font_back_btn)
         nav_layout.addStretch()
-        self._font_install_btn = Button("Install", variant="accent", padding="24,8,24,8")
+        self._font_install_btn = Button(tr("Install"), variant="accent", padding="24,8,24,8")
         self._font_install_btn.setVisible(False)
         self._font_install_btn.clicked.connect(self._on_font_install_clicked)
         nav_layout.addWidget(self._font_install_btn)
-        self._font_next = Button("Next", variant="accent", padding="24,8,24,8")
+        self._font_next = Button(tr("Next"), variant="accent", padding="24,8,24,8")
         self._font_next.setEnabled(False)
         self._font_next.clicked.connect(lambda: self._go(2))
         nav_layout.addWidget(self._font_next)
@@ -565,8 +571,10 @@ class WelcomeWizard(ViewBase, QDialog):
             self._radio(self._wm_cards, wm_key)
 
         return self._card_grid_page(
-            "Tiling Window Manager",
-            "A tiling window manager automatically arranges your windows.\nYASB can show workspaces and controls for Komorebi and GlazeWM. If you don't use one, select Skip.",
+            tr("Tiling Window Manager"),
+            tr(
+                "A tiling window manager automatically arranges your windows.\nYASB can show workspaces and controls for Komorebi and GlazeWM. If you don't use one, select Skip."
+            ),
             entries,
             2,
             on_wm,
@@ -583,8 +591,8 @@ class WelcomeWizard(ViewBase, QDialog):
         page_layout.setSpacing(0)
         self._header(
             page_layout,
-            "Optional Widgets",
-            "Choose additional widgets to add to your bar. Essential widgets are included by default.",
+            tr("Optional Widgets"),
+            tr("Choose additional widgets to add to your bar. Essential widgets are included by default."),
         )
         grid = QGridLayout()
         grid.setSpacing(8)
@@ -600,7 +608,7 @@ class WelcomeWizard(ViewBase, QDialog):
         page_layout.addWidget(
             InfoBar(
                 "",
-                "Quick Launch is configured to show on <b>Alt+Space</b>.",
+                tr("Quick Launch is configured to show on <b>Alt+Space</b>."),
                 InfoBarSeverity.INFORMATIONAL,
             )
         )
@@ -618,10 +626,12 @@ class WelcomeWizard(ViewBase, QDialog):
         page_layout.setContentsMargins(40, 28, 40, 20)
         page_layout.setSpacing(0)
         self._header(
-            page_layout, "Display & Effects", "Choose which screen to show the bar on and configure visual effects."
+            page_layout,
+            tr("Display & Effects"),
+            tr("Choose which screen to show the bar on and configure visual effects."),
         )
 
-        screen_dd = DropDown(items=[("*", "All screens"), ("primary", "Primary")])
+        screen_dd = DropDown(items=[("*", tr("All screens")), ("primary", tr("Primary"))])
         screen_dd.set_current("*")
         screen_dd.currentChanged.connect(lambda key: setattr(self, "_screen_selected", key))
 
@@ -634,7 +644,7 @@ class WelcomeWizard(ViewBase, QDialog):
         )
 
         page_layout.addSpacing(4)
-        style_dd = DropDown(items=[("floating", "Floating"), ("taskbar", "Taskbar")])
+        style_dd = DropDown(items=[("floating", tr("Floating")), ("taskbar", tr("Taskbar"))])
         style_dd.set_current("floating")
         style_dd.currentChanged.connect(lambda key: setattr(self, "_bar_style", key))
         page_layout.addWidget(
@@ -673,12 +683,12 @@ class WelcomeWizard(ViewBase, QDialog):
         page_layout.setContentsMargins(48, 40, 48, 24)
         page_layout.setSpacing(0)
         page_layout.addStretch(2)
-        title_label = TextBlock("All Set!", variant="title")
+        title_label = TextBlock(tr("All Set!"), variant="title")
         title_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         page_layout.addWidget(title_label)
         page_layout.addSpacing(12)
         tip_label = TextBlock(
-            "Visit the documentation to learn more about customization and styling.", variant="caption"
+            tr("Visit the documentation to learn more about customization and styling."), variant="caption"
         )
         tip_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         tip_label.setWordWrap(True)
@@ -688,14 +698,14 @@ class WelcomeWizard(ViewBase, QDialog):
         links_layout.setSpacing(8)
         links_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
         links_layout.addWidget(self._link("GitHub Wiki", lambda: QDesktopServices.openUrl(QUrl(GITHUB_WIKI_URL))))
-        links_layout.addWidget(self._link("Documentation", lambda: QDesktopServices.openUrl(QUrl(WEBSITE_DOCS_URL))))
+        links_layout.addWidget(self._link(tr("Documentation"), lambda: QDesktopServices.openUrl(QUrl(WEBSITE_DOCS_URL))))
         page_layout.addLayout(links_layout)
         page_layout.addStretch(3)
-        start_btn = Button("Start YASB", variant="accent", padding="32,12,32,12", font_size=16)
+        start_btn = Button(tr("Start YASB"), variant="accent", padding="32,12,32,12", font_size=16)
         start_btn.clicked.connect(self._on_create)
         page_layout.addWidget(start_btn, alignment=Qt.AlignmentFlag.AlignCenter)
         page_layout.addSpacing(12)
-        page_layout.addWidget(self._link("Back", lambda: self._go(4)), alignment=Qt.AlignmentFlag.AlignCenter)
+        page_layout.addWidget(self._link(tr("Back"), lambda: self._go(4)), alignment=Qt.AlignmentFlag.AlignCenter)
         page_layout.addSpacing(8)
         return page
 
@@ -710,7 +720,7 @@ class WelcomeWizard(ViewBase, QDialog):
     def _start_font_check(self) -> None:
         self._font_state = _FontState.CHECKING
         self._font_spinner.setVisible(True)
-        self._font_status.setText("Checking requirements...")
+        self._font_status.setText(tr("Checking requirements..."))
         self._font_check_worker = FontCheckWorker()
         self._font_check_worker.finished.connect(self._on_font_check_done)
         self._font_check_worker.start()
@@ -729,9 +739,9 @@ class WelcomeWizard(ViewBase, QDialog):
             status = self._font_status_labels.get(label)
             if status:
                 if installed:
-                    status.setText("Installed")
+                    status.setText(tr("Installed"))
                 else:
-                    status.setText("Will be installed")
+                    status.setText(tr("Will be installed"))
                     all_installed = False
 
         self._font_results_container.setVisible(True)
@@ -775,14 +785,14 @@ class WelcomeWizard(ViewBase, QDialog):
             self._font_next.setEnabled(True)
             self._font_status.setText("")
             for label, status_lbl in self._font_status_labels.items():
-                status_lbl.setText("Installed")
+                status_lbl.setText(tr("Installed"))
             self._go(2)
         else:
             self._font_state = _FontState.IDLE
             self._font_status.setText("")
             dlg = self._show_dialog(
                 "Font Installation Failed",
-                f"{msg}\n\nYou can retry.",
+                tr("{message}\n\nYou can retry.", message=msg),
                 primary_text="Retry",
                 close_text="OK",
                 default=ContentDialogButton.PRIMARY,
@@ -903,7 +913,7 @@ class WelcomeWizard(ViewBase, QDialog):
         except Exception as exc:
             self._show_dialog(
                 "Configuration Error",
-                f"Failed to save configuration:\n{exc}",
+                tr("Failed to save configuration:\n{error}", error=exc),
             ).show_dialog()
             return False
 

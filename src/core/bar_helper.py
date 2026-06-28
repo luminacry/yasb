@@ -33,6 +33,7 @@ from PyQt6.QtWidgets import (
 )
 from win32con import HWND_BOTTOM, HWND_NOTOPMOST, HWND_TOPMOST, SWP_NOACTIVATE, SWP_NOMOVE, SWP_NOSIZE
 
+from core.i18n import tr
 from core.utils.controller import exit_application, reload_application
 from core.utils.utilities import refresh_widget_style
 from core.utils.win32.app_bar import APPBAR_CALLBACK_MESSAGE, AppBarNotify
@@ -815,11 +816,11 @@ class BarContextMenu:
         self._menu.aboutToHide.connect(self._on_menu_about_to_hide)
 
         # Bar info
-        bar_info = self._menu.addAction(f"Bar: {self._bar_name}")
+        bar_info = self._menu.addAction(tr("Bar: {name}", name=self._bar_name))
         bar_info.setEnabled(False)
 
         # Widgets menu
-        widgets_menu = self._menu.addMenu("Active Widgets")
+        widgets_menu = self._menu.addMenu(tr("Active Widgets"))
         apply_qmenu_style(widgets_menu)
         widgets_menu.setProperty(
             "class", "context-menu submenu dark" if GlobalState.is_dark() else "context-menu submenu"
@@ -829,11 +830,11 @@ class BarContextMenu:
         self._menu.addSeparator()
 
         # System actions
-        task_manager = self._menu.addAction("Task Manager")
+        task_manager = self._menu.addAction(tr("Task Manager"))
         task_manager.triggered.connect(self._open_task_manager)
 
         # Screenshot action
-        screenshot_action = self._menu.addAction("Take Screenshot")
+        screenshot_action = self._menu.addAction(tr("Take Screenshot"))
         screenshot_action.triggered.connect(self._take_screenshot)
 
         self._menu.addSeparator()
@@ -846,16 +847,16 @@ class BarContextMenu:
         )
 
         if not current_autohide_enabled:
-            enable_autohide = self._menu.addAction("Enable Auto Hide")
+            enable_autohide = self._menu.addAction(tr("Enable Auto Hide"))
             enable_autohide.triggered.connect(self._enable_autohide)
         else:
-            disable_autohide = self._menu.addAction("Disable Auto Hide")
+            disable_autohide = self._menu.addAction(tr("Disable Auto Hide"))
             disable_autohide.triggered.connect(self._disable_autohide)
 
-        reload_action = self._menu.addAction("Reload Bar")
+        reload_action = self._menu.addAction(tr("Reload Bar"))
         reload_action.triggered.connect(partial(reload_application, "Reloading Bar from context menu..."))
 
-        exit_action = self._menu.addAction("Exit")
+        exit_action = self._menu.addAction(tr("Exit"))
         exit_action.triggered.connect(partial(exit_application, "Exiting Application from context menu..."))
 
         self._menu.popup(self.parent.mapToGlobal(position))
@@ -879,13 +880,13 @@ class BarContextMenu:
 
     def _populate_widgets_menu(self, widgets_menu):
         if not any(self._widgets.get(layout) for layout in ["left", "center", "right"]):
-            no_widgets = widgets_menu.addAction("No active widgets")
+            no_widgets = widgets_menu.addAction(tr("No active widgets"))
             no_widgets.setEnabled(False)
             return
 
         for i, layout_type in enumerate(["left", "center", "right"]):
             # Layout header
-            layout_header = widgets_menu.addAction(f"{layout_type.title()} Layout")
+            layout_header = widgets_menu.addAction(tr("{layout} Layout", layout=tr(layout_type.title())))
             layout_header.setEnabled(False)
 
             # Add widgets or empty message
@@ -893,7 +894,7 @@ class BarContextMenu:
                 for widget in self._widgets[layout_type]:
                     self._add_widget_checkbox(widgets_menu, widget)
             else:
-                no_widgets = widgets_menu.addAction("  No active widgets")
+                no_widgets = widgets_menu.addAction(tr("  No active widgets"))
                 no_widgets.setEnabled(False)
             # Add separator after each layout except the last one
             if i < 2:

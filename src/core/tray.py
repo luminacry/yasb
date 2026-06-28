@@ -12,6 +12,7 @@ from PyQt6.QtGui import QColor, QIcon, QPainter, QPixmap
 from PyQt6.QtWidgets import QSystemTrayIcon
 
 from core.bar_manager import BarManager
+from core.i18n import tr
 from core.ui.views.about import AboutDialog
 from core.utils.controller import exit_application, reload_application
 from core.utils.shell_utils import shell_open
@@ -82,7 +83,7 @@ class SystemTrayManager(QSystemTrayIcon):
         painter.drawEllipse(30, 0, 18, 18)
         painter.end()
         self.setIcon(QIcon(base))
-        self.setToolTip("Update available")
+        self.setToolTip(tr("Update available"))
 
     def _try_enable_dark_menu(self, hwnd):
         try:
@@ -111,47 +112,49 @@ class SystemTrayManager(QSystemTrayIcon):
                 win32gui.AppendMenu(menu, win32con.MF_SEPARATOR, 0, "")
 
             if self._update_available:
-                add_item(hmenu, "Update Available", self._open_update_dialog)
+                add_item(hmenu, tr("Update Available"), self._open_update_dialog)
                 add_sep(hmenu)
 
-            add_item(hmenu, "Open Config", self._open_config)
+            add_item(hmenu, tr("Open Config"), self._open_config)
             if os.path.exists(THEME_EXE_PATH):
-                add_item(hmenu, "Get Themes", lambda: os.startfile(THEME_EXE_PATH))
-            add_item(hmenu, "Reload YASB", self._reload_application)
+                add_item(hmenu, tr("Get Themes"), lambda: os.startfile(THEME_EXE_PATH))
+            add_item(hmenu, tr("Reload YASB"), self._reload_application)
             add_sep(hmenu)
 
             if self.komorebi_enabled and self.is_wm_installed("komorebi"):
                 km_sub = win32gui.CreatePopupMenu()
                 if self.komorebi_start:
-                    add_item(km_sub, "Start Komorebi", lambda: self._run_wm_command("Komorebi", self.komorebi_start))
+                    add_item(km_sub, tr("Start Komorebi"), lambda: self._run_wm_command("Komorebi", self.komorebi_start))
                 if self.komorebi_stop:
-                    add_item(km_sub, "Stop Komorebi", lambda: self._run_wm_command("Komorebi", self.komorebi_stop))
+                    add_item(km_sub, tr("Stop Komorebi"), lambda: self._run_wm_command("Komorebi", self.komorebi_stop))
                 if self.komorebi_reload:
-                    add_item(km_sub, "Reload Komorebi", lambda: self._run_wm_command("Komorebi", self.komorebi_reload))
+                    add_item(
+                        km_sub, tr("Reload Komorebi"), lambda: self._run_wm_command("Komorebi", self.komorebi_reload)
+                    )
                 win32gui.AppendMenu(hmenu, win32con.MF_POPUP, km_sub, "Komorebi")
                 add_sep(hmenu)
 
             if self.glazewm_enabled and self.is_wm_installed("glazewm"):
                 gw_sub = win32gui.CreatePopupMenu()
                 if self.glazewm_start:
-                    add_item(gw_sub, "Start GlazeWM", lambda: self._run_wm_command("Glazewm", self.glazewm_start))
+                    add_item(gw_sub, tr("Start GlazeWM"), lambda: self._run_wm_command("Glazewm", self.glazewm_start))
                 if self.glazewm_stop:
-                    add_item(gw_sub, "Stop GlazeWM", lambda: self._run_wm_command("Glazewm", self.glazewm_stop))
+                    add_item(gw_sub, tr("Stop GlazeWM"), lambda: self._run_wm_command("Glazewm", self.glazewm_stop))
                 if self.glazewm_reload:
-                    add_item(gw_sub, "Reload GlazeWM", lambda: self._run_wm_command("Glazewm", self.glazewm_reload))
+                    add_item(gw_sub, tr("Reload GlazeWM"), lambda: self._run_wm_command("Glazewm", self.glazewm_reload))
                 win32gui.AppendMenu(hmenu, win32con.MF_POPUP, gw_sub, "GlazeWM")
                 add_sep(hmenu)
 
             if AUTOSTART_FILE:
                 if self._check_startup():
-                    add_item(hmenu, "Disable Autostart", self._disable_startup)
+                    add_item(hmenu, tr("Disable Autostart"), self._disable_startup)
                 else:
-                    add_item(hmenu, "Enable Autostart", self._enable_startup)
+                    add_item(hmenu, tr("Enable Autostart"), self._enable_startup)
 
-            add_item(hmenu, "Help", lambda: self._open_in_browser(GITHUB_WIKI_URL))
-            add_item(hmenu, "About", self._show_about_dialog)
+            add_item(hmenu, tr("Help"), lambda: self._open_in_browser(GITHUB_WIKI_URL))
+            add_item(hmenu, tr("About"), self._show_about_dialog)
             add_sep(hmenu)
-            add_item(hmenu, "Exit", self._exit_application)
+            add_item(hmenu, tr("Exit"), self._exit_application)
 
             bars = self._bar_manager.bars
             hwnd = int(bars[0].winId()) if bars else win32gui.GetDesktopWindow()

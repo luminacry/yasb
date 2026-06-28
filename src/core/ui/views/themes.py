@@ -66,6 +66,7 @@ from PyQt6.QtWidgets import (
     QWidget,
 )
 
+from core.i18n import tr
 from core.ui.components.button import Button
 from core.ui.components.link import Link
 from core.ui.components.loader import Spinner
@@ -659,7 +660,7 @@ class ThemeSidebarItemWidget(QWidget):
         row.addWidget(self.name_lbl, 1)
 
         if disabled:
-            badge = QLabel("disabled")
+            badge = QLabel(tr("disabled"))
             badge.setFont(_ui_font(11))
             badge.setStyleSheet(
                 f"color: {t['disabled_badge_text']}; background: {t['disabled_badge_bg']};"
@@ -755,7 +756,7 @@ class ThemeDetailPanel(QWidget):
         links_group.addWidget(self.author_label, 0, Qt.AlignmentFlag.AlignVCenter)
 
         self.report_btn = Link(
-            "Report",
+            tr("Report"),
             font_size=12,
         )
         self.report_btn.setSizePolicy(QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Preferred)
@@ -808,7 +809,7 @@ class ThemeDetailPanel(QWidget):
         icon_label.setStyleSheet("background: transparent;")
         bar_layout.addWidget(icon_label, 0)
 
-        message_label = QLabel("This theme is temporarily disabled until the author fixes the problem.")
+        message_label = QLabel(tr("This theme is temporarily disabled until the author fixes the problem."))
         message_label.setFont(_ui_font(12, QFont.Weight.DemiBold))
         message_label.setWordWrap(True)
         message_label.setStyleSheet("background: transparent;")
@@ -871,7 +872,7 @@ class ThemeDetailPanel(QWidget):
         self._not_found_widget.setStyleSheet("background: transparent;")
         layout = QVBoxLayout(self._not_found_widget)
         layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self._not_found_label = QLabel("Theme not found")
+        self._not_found_label = QLabel(tr("Theme not found"))
         self._not_found_label.setFont(_ui_font(19))
         self._not_found_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self._not_found_label.setStyleSheet(f"color: {t['text_secondary']}; background: transparent;")
@@ -888,8 +889,8 @@ class ThemeDetailPanel(QWidget):
         footer_layout.setSpacing(10)
 
         footer_layout.addStretch()
-        self.download_btn = _make_btn("View on GitHub", "default", self._on_download)
-        self.install_btn = _make_btn("Install Theme", "accent", self._on_install)
+        self.download_btn = _make_btn(tr("View on GitHub"), "default", self._on_download)
+        self.install_btn = _make_btn(tr("Install Theme"), "accent", self._on_install)
         footer_layout.addWidget(self.download_btn)
         footer_layout.addWidget(self.install_btn)
         root.addWidget(self.footer)
@@ -960,7 +961,7 @@ class ThemeDetailPanel(QWidget):
         self.name_label.setText(data.get("name", ""))
         author = html_escape(data.get("author", ""))
         self._author_url = data.get("homepage") or f"https://github.com/{author}"
-        self.author_label.setText(f"by {author}")
+        self.author_label.setText(tr("by {author}", author=author))
         self.desc_label.setText(data.get("description", ""))
 
     def _on_author(self) -> None:
@@ -1138,16 +1139,17 @@ class ThemeDetailPanel(QWidget):
         body.setContentsMargins(24, 0, 24, 34)
         body.setSpacing(0)
 
-        title = QLabel("Install Theme")
+        title = QLabel(tr("Install Theme"))
         title.setFont(_ui_font(19, QFont.Weight.Bold))
         title.setStyleSheet(f"color: {t['text_primary']}; background: transparent;")
         body.addWidget(title)
         body.addSpacing(8)
 
         desc = QLabel(
-            f"Are you sure you want to install <b>{html_escape(self.theme_data['name'])}</b>?<br>"
-            "This will overwrite your current config and styles files.<br>"
-            "Note: Some themes require additional fonts."
+            tr(
+                "Are you sure you want to install <b>{name}</b>?<br>This will overwrite your current config and styles files.<br>Note: Some themes require additional fonts.",
+                name=html_escape(self.theme_data["name"]),
+            )
         )
         desc.setFont(_ui_font(13))
         desc.setWordWrap(True)
@@ -1163,9 +1165,9 @@ class ThemeDetailPanel(QWidget):
         fl.setContentsMargins(0, 0, 0, 0)
         fl.setSpacing(8)
         fl.addStretch()
-        cancel_btn = _make_btn("Cancel", "default", slot=dialog.reject)
+        cancel_btn = _make_btn(tr("Cancel"), "default", slot=dialog.reject)
         cancel_btn.setFixedSize(120, 28)
-        install_btn = _make_btn("Install", "accent", slot=dialog.accept)
+        install_btn = _make_btn(tr("Install"), "accent", slot=dialog.accept)
         install_btn.setFixedSize(120, 28)
         fl.addWidget(cancel_btn)
         fl.addWidget(install_btn)
@@ -1209,13 +1211,13 @@ class ThemeDetailPanel(QWidget):
                     last_err = exc
             raise last_err or RuntimeError("Failed to download theme files")
         except Exception as exc:
-            QMessageBox.critical(self, "Error", f"Failed to install theme: {exc}")
+            QMessageBox.critical(self, tr("Error"), tr("Failed to install theme: {error}", error=exc))
 
 
 class ThemeViewer(ViewBase, QMainWindow):
     def __init__(self, deep_link_theme_id: str | None = None):
         super().__init__()
-        self.setWindowTitle("YASB Themes")
+        self.setWindowTitle(tr("YASB Themes"))
         self.build_app_icon()
         screen = QApplication.primaryScreen().availableGeometry()
         h = max(600, min(int(screen.height() * 0.78), 1000))
@@ -1281,7 +1283,7 @@ class ThemeViewer(ViewBase, QMainWindow):
         header_layout.addWidget(self._header_title)
         header_layout.addStretch()
 
-        self._header_info = QLabel("Backup your config before installing a theme.")
+        self._header_info = QLabel(tr("Backup your config before installing a theme."))
         self._header_info.setFont(_ui_font(12))
         self._header_info.setStyleSheet(f"color: {t['text_primary']};")
         info_opacity = QGraphicsOpacityEffect()
@@ -1289,9 +1291,9 @@ class ThemeViewer(ViewBase, QMainWindow):
         self._header_info.setGraphicsEffect(info_opacity)
         header_layout.addWidget(self._header_info)
 
-        self.backup_button = _make_btn("Backup", "default", slot=self._backup_config)
+        self.backup_button = _make_btn(tr("Backup"), "default", slot=self._backup_config)
         header_layout.addWidget(self.backup_button)
-        self.restore_button = _make_btn("Restore", "default", slot=self._restore_config)
+        self.restore_button = _make_btn(tr("Restore"), "default", slot=self._restore_config)
         header_layout.addWidget(self.restore_button)
 
         root.addWidget(self.header)
@@ -1322,7 +1324,7 @@ class ThemeViewer(ViewBase, QMainWindow):
         search_layout.setContentsMargins(8, 0, 16, 8)
         search_layout.setSpacing(0)
         self.search_box = QLineEdit()
-        self.search_box.setPlaceholderText("Search themes...")
+        self.search_box.setPlaceholderText(tr("Search themes..."))
         self.search_box.setFont(_ui_font(13))
         self.search_box.setClearButtonEnabled(True)
         self.search_box.setStyleSheet(_search_box_style(t))
@@ -1373,7 +1375,7 @@ class ThemeViewer(ViewBase, QMainWindow):
 
     def _request_theme_index(self, index: int) -> None:
         if index >= len(self._theme_urls):
-            self._on_load_error("Failed to load themes.")
+            self._on_load_error(tr("Failed to load themes."))
             return
         reply = self._net.get(_network_request(self._theme_urls[index]))
         reply.finished.connect(
@@ -1539,35 +1541,35 @@ class ThemeViewer(ViewBase, QMainWindow):
                 shutil.copy2(cfg, bcfg)
             if os.path.exists(sty):
                 shutil.copy2(sty, bsty)
-            self.backup_button.setText("Backup complete!")
+            self.backup_button.setText(tr("Backup complete!"))
             self.backup_button.set_variant("accent")
             QTimer.singleShot(
                 2000,
                 lambda: (
-                    self.backup_button.setText("Backup"),
+                    self.backup_button.setText(tr("Backup")),
                     self.backup_button.set_variant("default"),
                 ),
             )
         except Exception as e:
-            QMessageBox.critical(self, "Error", f"Backup failed: {e}")
+            QMessageBox.critical(self, tr("Error"), tr("Backup failed: {error}", error=e))
 
     def _restore_config(self):
-        self.restore_button.setText("Restoring\u2026")
+        self.restore_button.setText(tr("Restoring..."))
         QApplication.processEvents()
         cfg, sty, bcfg, bsty = self._config_paths()
         try:
             if not os.path.exists(bcfg) or not os.path.exists(bsty):
-                self.restore_button.setText("Restore")
-                QMessageBox.warning(self, "Error", "Restore failed: backup files missing.")
+                self.restore_button.setText(tr("Restore"))
+                QMessageBox.warning(self, tr("Error"), tr("Restore failed: backup files missing."))
                 return
             _run_yasbc("stop")
             shutil.copy2(bcfg, cfg)
             shutil.copy2(bsty, sty)
-            self.restore_button.setText("Restore complete!")
+            self.restore_button.setText(tr("Restore complete!"))
             _run_yasbc("start")
-            QTimer.singleShot(2000, lambda: self.restore_button.setText("Restore"))
+            QTimer.singleShot(2000, lambda: self.restore_button.setText(tr("Restore")))
         except Exception as e:
-            QMessageBox.critical(self, "Error", f"Restore failed: {e}")
+            QMessageBox.critical(self, tr("Error"), tr("Restore failed: {error}", error=e))
 
     def closeEvent(self, event):
         self._splash_timer.stop()
